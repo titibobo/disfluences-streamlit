@@ -56,7 +56,7 @@ if uploaded_file is not None:
         if response.status_code == 200:
             result = response.json()
             st.success("✅ Prédiction réussie !")
-            st.json(result)
+            #st.json(result)
 
             tab3 = st.tabs(["📊 Prédiction graphique"])
 
