@@ -46,38 +46,74 @@ if uploaded_file is not None:
         ax.set_title("Spectrogramme log-Mel")
         st.pyplot(fig)
 
-    # Bouton Predict
+
+        # Bouton Predict
     if st.button("🚀 Prédire les disfluences"):
         # Prépare l’audio pour envoi
         files = {"file": (uploaded_file.name, uploaded_file, "audio/wav")}
         with st.spinner("Envoi au modèle..."):
-            response = requests.post(f"{st.secrets["api_url"]}/predict_audio", files=files)
+            response = requests.post(f"{st.secrets['api_url']}/predict_audio", files=files)
 
         if response.status_code == 200:
             result = response.json()
             st.success("✅ Prédiction réussie !")
-            #st.json(result)
 
-            tab3 = st.tabs(["📊 Prédiction graphique"])
+            # Tabs pour l'affichage
+            tab3 = st.tabs(["📊 Prédiction graphique", "📈 Statistiques globales"])
 
+            # --- Graphique temporel ---
             with tab3[0]:
                 st.subheader("Prédiction graphique")
 
-                # Récupérer les prédictions (300 valeurs)
-                data = result["decisecond_preds"]
+                # Récupérer les prédictions (liste de classes, ex: ["fluent", "silence", "EP", "FP"])
+                preds = result["decisecond_preds"]
 
-                # Créer un axe temporel (chaque point = 0.1s)
-                n = len(data)
+                # Axe temporel (chaque point = 0.1s)
+                n = len(preds)
                 t = np.arange(0, n * 0.1, 0.1)
 
-                # Tracé
+                # Mapping classes -> entiers pour affichage
+                from collections import Counter
+                class_to_int = {cls: i for i, cls in enumerate(sorted(set(preds)))}
+                y = [class_to_int[c] for c in preds]
+
                 fig, ax = plt.subplots(figsize=(12, 3))
-                ax.step(t, data, where="mid", color="navy")  # step plot = mieux pour labels discrets
+                ax.step(t, y, where="mid", color="navy")
                 ax.set_xlabel("Temps (s)")
-                ax.set_ylabel("Classe prédite")
-                ax.set_title("Prédiction des catégories de l'enregistrement (chaque 0.1s)")
+                ax.set_ylabel("Classe")
+                ax.set_yticks(list(class_to_int.values()))
+                ax.set_yticklabels(list(class_to_int.keys()))
+                ax.set_title("Séquence des prédictions (chaque 0.1s)")
                 st.pyplot(fig)
 
+            # --- Statistiques globales ---
+            with tab3[1]:
+                st.subheader("📈 Statistiques globales")
+
+                from collections import Counter
+                counts = Counter(preds)
+                total = len(preds)
+                proportions = {cls: count/total*100 for cls, count in counts.items()}
+
+                # Métriques principales
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Total frames (0.1s)", total)
+                with col2:
+                    st.metric("Nombre de classes détectées", len(counts))
+
+                # Métriques par classe
+                for cls, count in counts.items():
+                    st.metric(f"{cls}", f"{count} ({proportions[cls]:.1f}%)")
+
+                # Camembert
+                labels = list(counts.keys())
+                values = list(counts.values())
+
+                fig, ax = plt.subplots()
+                ax.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
+                ax.set_title("Répartition des classes")
+                st.pyplot(fig)
 
         else:
             st.error(f"Erreur API ({response.status_code})")
@@ -87,22 +123,43 @@ if uploaded_file is not None:
 
 
 
+
+
+
+
+    # Bouton Predict
+    #if st.button("🚀 Prédire les disfluences"):
+        # Prépare l’audio pour envoi
+        #files = {"file": (uploaded_file.name, uploaded_file, "audio/wav")}
+        #with st.spinner("Envoi au modèle..."):
+            #response = requests.post(f"{st.secrets["api_url"]}/predict_audio", files=files)
+
         #if response.status_code == 200:
             #result = response.json()
-
             #st.success("✅ Prédiction réussie !")
             #st.json(result)
 
-            #tab3 = st.tabs(["📉 Prédiction graphique"])
+            #tab3 = st.tabs(["📊 Prédiction graphique"])
 
-            #st.subheader("Prédiction graphique")
-            #data = result['decisecond_preds']
-            #n = len(data)
-            #t = np.arange(0,n*0.1,0.1)
+            #with tab3[0]:
+                #st.subheader("Prédiction graphique")
 
-            #fig, ax = plt.subplots(figsize=(12, 2.2))
-            #ax.plot(t, data, color='navy')
-            #ax.set_xlabel("Temps (s)")
-            #ax.set_ylabel("Prédiction (label)")
-            #ax.set_title("Prédiction des catégories de l'enregistrement")
-            #st.pyplot(fig)
+                # Récupérer les prédictions (300 valeurs)
+                #data = result["decisecond_preds"]
+
+                # Créer un axe temporel (chaque point = 0.1s)
+                #n = len(data)
+                #t = np.arange(0, n * 0.1, 0.1)
+
+                # Tracé
+                #fig, ax = plt.subplots(figsize=(12, 3))
+                #ax.step(t, data, where="mid", color="navy")  # step plot = mieux pour labels discrets
+                #ax.set_xlabel("Temps (s)")
+                #ax.set_ylabel("Classe prédite")
+                #ax.set_title("Prédiction des catégories de l'enregistrement (chaque 0.1s)")
+                #st.pyplot(fig)
+
+
+        #else:
+            #st.error(f"Erreur API ({response.status_code})")
+            #st.text(response.text)
