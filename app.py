@@ -106,13 +106,21 @@ if uploaded_file is not None:
                 for cls, count in counts.items():
                     st.metric(f"{cls}", f"{count} ({proportions[cls]:.1f}%)")
 
-                # Camembert
+                # Histogramme (bar chart)
                 labels = list(counts.keys())
                 values = list(counts.values())
 
-                fig, ax = plt.subplots()
-                ax.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
+                fig, ax = plt.subplots(figsize=(8, 4))
+                bars = ax.bar(labels, values, color="steelblue")
+                ax.set_xlabel("Classe")
+                ax.set_ylabel("Nombre de frames (0.1s)")
                 ax.set_title("Répartition des classes")
+
+                # Afficher les valeurs au-dessus des barres
+                for bar, val in zip(bars, values):
+                    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height(), str(val),
+                            ha='center', va='bottom', fontsize=9)
+
                 st.pyplot(fig)
 
         else:
