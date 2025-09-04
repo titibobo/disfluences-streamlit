@@ -65,27 +65,33 @@ if uploaded_file is not None:
             with tab3[0]:
                 st.subheader("Prédiction graphique")
 
-                # Récupérer les prédictions (liste de classes, ex: ["fluent", "silence", "EP", "FP"])
+                # Récupérer les prédictions (liste de classes, ex: ["fluent", "EP", "FP/Laugh"])
                 preds = result["frame_labels"]
-
 
                 # Axe temporel (chaque point = 0.1s)
                 n = len(preds)
                 t = np.arange(0, n * 0.1, 0.1)
 
-                # Mapping classes -> entiers pour affichage
-                from collections import Counter
-                class_to_int = {cls: i for i, cls in enumerate(sorted(set(preds)))}
-                y = [class_to_int[c] for c in preds]
+                # Ordre manuel des classes (fluent au milieu)
+                ordered_classes = ["EP", "fluent", "FP/Laugh"]
+                class_to_int = {cls: i for i, cls in enumerate(ordered_classes)}
 
-                fig, ax = plt.subplots(figsize=(12, 3))
-                ax.step(t, y, where="mid", color="navy")
-                ax.set_xlabel("Temps (s)")
-                ax.set_ylabel("Classe")
+                # Conversion des prédictions
+                y = [class_to_int.get(c, -1) for c in preds]  # -1 si une classe imprévue
+
+                # Plot
+                fig, ax = plt.subplots(figsize=(18, 6))
+                ax.step(t, y, where="mid", color="navy", linewidth=1.5)
+
+                ax.set_xlabel("Temps (s)", fontsize=12)
+                ax.set_ylabel("Classe", fontsize=12)
                 ax.set_yticks(list(class_to_int.values()))
-                ax.set_yticklabels(list(class_to_int.keys()))
-                ax.set_title("Séquence des prédictions (chaque 0.1s)")
+                ax.set_yticklabels(list(class_to_int.keys()), fontsize=11)
+                ax.set_title("Séquence des prédictions (chaque 0.1s)", fontsize=14, weight="bold")
+                ax.grid(True, linestyle="--", alpha=0.6)
+
                 st.pyplot(fig)
+
 
             # --- Statistiques globales ---
             with tab3[1]:
