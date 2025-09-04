@@ -66,7 +66,8 @@ if uploaded_file is not None:
                 st.subheader("Prédiction graphique")
 
                 # Récupérer les prédictions (liste de classes, ex: ["fluent", "silence", "EP", "FP"])
-                preds = result["decisecond_preds"]
+                preds = result["frame_labels"]
+
 
                 # Axe temporel (chaque point = 0.1s)
                 n = len(preds)
